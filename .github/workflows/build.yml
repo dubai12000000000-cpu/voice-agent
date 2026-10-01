@@ -62,9 +62,11 @@ jobs:
           protected void onCreate(Bundle b){super.onCreate(b);setContentView(R.layout.activity_main);Intent i=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);startActivityForResult(i,100);}
           protected void onActivityResult(int r,int res,Intent d){super.onActivityResult(r,res,d);if(r==100&&res==RESULT_OK){ArrayList<String> l=d.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);String s=l.get(0).toLowerCase();if(s.contains("gallery"))startActivity(new Intent(Intent.ACTION_VIEW,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI));else if(s.contains("youtube")){try{startActivity(getPackageManager().getLaunchIntentForPackage("com.google.android.youtube"));}catch(Exception e){}}else if(s.contains("facebook")){try{startActivity(getPackageManager().getLaunchIntentForPackage("com.facebook.katana"));}catch(Exception e){startActivity(new Intent(Intent.ACTION_VIEW,android.net.Uri.parse("https://facebook.com")));}}}}}
           EOF
-      - uses: gradle/actions/setup-gradle@v3
-      - run: gradle wrapper --gradle-version 8.5
-      - run: chmod +x gradlew &&./gradlew assembleDebug
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.5
+          arguments: assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: voice-agent-apk
