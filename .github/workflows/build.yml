@@ -1,5 +1,6 @@
-name: build
-on: [push, workflow_dispatch]
+
+name: Build APK
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -7,23 +8,25 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
           java-version: '17'
-      - name: Make gradlew executable
+          distribution: 'temurin'
+      - name: Create Full Project
         run: |
-          chmod +x gradlew 2>/dev/null || true
-          chmod +x android/gradlew 2>/dev/null || true
-      - name: Build APK
-        run: |
-          if [ -f android/gradlew ]; then
-            cd android && ./gradlew assembleDebug
-          else
-            ./gradlew assembleDebug
-          fi
-      - uses: actions/upload-artifact@v4
-        with:
-          name: apk
-          path: |
-            android/app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/debug/*.apk
-            **/app-debug.apk
+          mkdir -p app/src/main/java/com/voice/agent
+          mkdir -p app/src/main/res/layout
+          echo "include ':app'" > settings.gradle
+          echo "buildscript { repositories { google(); mavenCentral() } dependencies { classpath 'com.android.tools.build:gradle:8.2.2' } } allprojects { repositories { google(); mavenCentral() } }" > build.gradle
+          cat > app/build.gradle <<'EOF'
+          plugins { id 'com.android.application' }
+          android {
+            namespace 'com.voice.agent'
+            compileSdk 34
+            defaultConfig { applicationId "com.voice.agent"; minSdk 24; targetSdk 34; versionCode 1; versionName "1.0" }
+          }
+          dependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }
+          EOF
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-permission android:name="android.permission.ANSWER_PHONE_CCALLS
