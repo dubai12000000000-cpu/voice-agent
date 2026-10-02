@@ -10,42 +10,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - name: Create Project
-        run: |
-          rm -rf app build.gradle settings.gradle
-          echo "include ':app'" > settings.gradle
-          mkdir -p app/src/main/java/com/voice/agent
-          echo "plugins { id 'com.android.application' version '8.2.2' apply false; id 'org.jetbrains.kotlin.android' version '1.9.22' apply false }" > build.gradle
-          cat > app/build.gradle <<'EOF'
-          plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
-          android { namespace 'com.voice.agent'; compileSdk 34; defaultConfig { applicationId "com.voice.agent"; minSdk 24; targetSdk 34; versionCode 1; versionName "1.0" } }
-          dependencies { implementation 'androidx.core:core-ktx:1.12.0'; implementation 'androidx.appcompat:appcompat:1.6.1' }
-          EOF
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Voice Agent" android:theme="@android:style/Theme.Material.Light"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
-          EOF
-          cat > app/src/main/java/com/voice/agent/MainActivity.kt <<'EOF'
-          package com.voice.agent
-          import android.os.Bundle
-          import androidx.appcompat.app.AppCompatActivity
-          import android.widget.TextView
-          class MainActivity : AppCompatActivity() {
-            override fun onCreate(b: Bundle?) {
-              super.onCreate(b)
-              val tv = TextView(this)
-              tv.text = "Salam Hazro! APK Ready"
-              tv.textSize = 24f
-              tv.setPadding(50,300,50,50)
-              setContentView(tv)
-            }
-          }
-          EOF
       - name: Build
         run: |
+          echo "include ':app'" > settings.gradle
+          echo "plugins { id 'com.android.application' version '8.2.2' apply false }" > build.gradle
+          mkdir -p app/src/main/java/com/voice/agent
+          echo "plugins { id 'com.android.application' } android { namespace 'com.voice.agent'; compileSdk 34; defaultConfig { applicationId 'com.voice.agent'; minSdk 24; targetSdk 34 } }" > app/build.gradle
+          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Voice"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+          printf 'package com.voice.agent; import android.app.Activity; import android.widget.TextView; public class MainActivity extends Activity { protected void onCreate(android.os.Bundle b){ super.onCreate(b); TextView t=new TextView(this); t.setText("Salam Hazro"); setContentView(t);} }' > app/src/main/java/com/voice/agent/MainActivity.java
           gradle wrapper --gradle-version 8.6
           chmod +x gradlew
          ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: voice-agent-apk
+          name: apk
           path: app/build/outputs/apk/debug/*.apk
